@@ -202,20 +202,20 @@ canvas.pack()
 
 # slider bar
 brightness_label = ttk.Label(left_frame,text="Brightness:")
-brightness_label.pack()
+brightness_label.pack(pady=5)
 
 brightness_var = ttk.DoubleVar()
 brightness_var.set(1.0)
 brightness_scale = ttk.Scale(left_frame, from_=0.1, to=2.0, length=200, orient=ttk.HORIZONTAL, variable=brightness_var,command=lambda x: update_brightness())
-brightness_scale.pack()
+brightness_scale.pack(pady=5)
 
 contrast_label = ttk.Label(left_frame,text="Contrast:")
-contrast_label.pack()
+contrast_label.pack(pady=5)
 
 contrast_var = ttk.DoubleVar()
 contrast_var.set(1.0)
 contrast_scale = ttk.Scale(left_frame, from_=0.1, to=2.0, length=200, orient=ttk.HORIZONTAL, variable=contrast_var,command=lambda x: update_contrast())
-contrast_scale.pack()
+contrast_scale.pack(pady=5)
 
 # button for filters
 def on_combobox_select(event):
@@ -263,20 +263,20 @@ save_button.pack(pady=5)
 
 # Add Drawing buttons
 start_drawing_button = ttk.Button(left_frame, text="Start Drawing", command=start_drawing)
-start_drawing_button.pack()
+start_drawing_button.pack(pady=5)
 
 stop_drawing_button = ttk.Button(left_frame, text="Stop Drawing", command=stop_drawing)
-stop_drawing_button.pack()
+stop_drawing_button.pack(pady=5)
 
 canvas.bind("<Button-1>", draw)
 canvas.bind("<B1-Motion>", draw)
 
 # undo
 undo_button = ttk.Button(left_frame, text="Undo", command=undo)
-undo_button.pack()
+undo_button.pack(pady=5)
 
 # redo
 redo_button = ttk.Button(left_frame, text="Redo", command=redo)
-redo_button.pack()
+redo_button.pack(pady=5)
 
 root.mainloop()
