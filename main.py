@@ -175,10 +175,10 @@ def erase_lines():
 
 # Save Image
 def save_image():
-    global current_image_path,displayed_image
+    global current_image_path
 
     if current_image_path:
-        image = displayed_image
+        image = ImageGrab.grab(bbox=(canvas.winfo_rootx(), canvas.winfo_rooty(), canvas.winfo_rootx() + canvas.winfo_width(), canvas.winfo_rooty() + canvas.winfo_height()))
         file_path = filedialog.asksaveasfilename(defaultextension=".jpg")
         
         if file_path:
