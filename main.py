@@ -170,7 +170,8 @@ def change_color():
 
 # Erase Function
 def erase_lines():
-    global canvas
+    global canvas,current_draw
+    current_draw = []
     canvas.delete("line")
 
 # Save Image
