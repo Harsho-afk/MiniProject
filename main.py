@@ -12,6 +12,7 @@ pen_color = "black"
 brightness_factor = 1.0
 contrast_factor = 1.0
 drawing_mode = False
+flip = None
 
 current_image_path = None
 original_image = None
@@ -40,11 +41,17 @@ def open_image():
         save_to_history(original_image)
         display_image(original_image)
 
-
+# function to flip image
 def flip_image():
-    global original_image,displayed_image
+    global original_image,displayed_image,flip
     if original_image:
-        fliped_image = original_image.transpose(Image.FLIP_LEFT_RIGHT)
+        match flip:
+            case "None":
+                return
+            case "Horizontal":
+                fliped_image = original_image.transpose(Image.FLIP_LEFT_RIGHT)
+            case "Vertical":
+                fliped_image = original_image.transpose(Image.FLIP_TOP_BOTTOM)
         save_to_history(fliped_image)
         display_image(fliped_image)
         original_image = fliped_image
@@ -99,6 +106,7 @@ def apply_filter(filter,fromRedo):
     else:
         showerror(title='Filter Image Error', message='Please select an image first!')
 
+# function to update brightness
 def update_brightness():
     global original_image,displayed_image,brightness_var
     if original_image:
@@ -107,6 +115,7 @@ def update_brightness():
         #save_to_history(enhanced_image)
         display_image(enhanced_image)
 
+# fucntion to update contrast
 def update_contrast():
     global original_image,displayed_image,contrast_var
     if original_image:
@@ -115,6 +124,7 @@ def update_contrast():
         #save_to_history(enhanced_image)
         display_image(enhanced_image)
 
+# fucntion to save image to list after a change
 def save_to_history(image):
     global image_history, history_index
     if image:
@@ -122,7 +132,7 @@ def save_to_history(image):
         image_history.append(image.copy())
         history_index = len(image_history) - 1
 
-
+# undo function
 undo_filters = []
 def undo():
     global original_image,history_index,filtersApplied,undo_filters
@@ -134,6 +144,7 @@ def undo():
             undo_filters.append(filtersApplied.pop())
     return history_index
 
+# redo function
 def redo():
     global original_image,history_index,undo_filters
     if history_index < len(image_history) - 1:
@@ -145,7 +156,7 @@ def redo():
         
     return history_index
 
-# function for drawing lines on the opened image
+# draw fucntions
 def start_drawing():
     global drawing_mode,current_draw
     drawing_mode = True
@@ -168,13 +179,23 @@ def change_color():
     global pen_color
     pen_color = colorchooser.askcolor(title="Select Pen Color")[1]
 
-# Erase Function
+# erase function
 def erase_lines():
     global canvas,current_draw
     current_draw = []
     canvas.delete("line")
+    
+# combobox fucntion for filters
+def on_combobox_selectFilter(event):
+    selected_value = filter_combobox.get()
+    apply_filter(selected_value,False)
 
-# Save Image
+# combobox fucntion for flip
+def on_combobox_selectFlip(event):
+    global flip
+    flip = flip_combobox.get()
+
+# save Image
 def save_image():
     global current_image_path
 
@@ -186,51 +207,22 @@ def save_image():
             if askyesno(title='Save Image', message='Do you want to save this image?'):
                 image.save(file_path)
 
-# WINDOW
+# window
 root = ttk.Window(themename="cosmo")
 root.title("Image Editor")
 root.geometry("1920x1080+0+0")
 icon = ttk.PhotoImage(file='Images/icon.png')
 root.iconphoto(False, icon)
 
-# WIDGET
-left_frame = ttk.Frame(root, width=200, height=720)
+# widget
+left_frame = ttk.Frame(root,width=200, height=720)
 left_frame.pack(side="left", fill="y")
 
-# CANVAS
+# canvas
 canvas = ttk.Canvas(root, width=WIDTH, height=HEIGHT)
 canvas.pack()
 
-# slider bar
-brightness_label = ttk.Label(left_frame,text="Brightness:")
-brightness_label.pack(pady=5)
-
-brightness_var = ttk.DoubleVar()
-brightness_var.set(1.0)
-brightness_scale = ttk.Scale(left_frame, from_=0.1, to=2.0, length=200, orient=ttk.HORIZONTAL, variable=brightness_var,command=lambda x: update_brightness())
-brightness_scale.pack(pady=5)
-
-contrast_label = ttk.Label(left_frame,text="Contrast:")
-contrast_label.pack(pady=5)
-
-contrast_var = ttk.DoubleVar()
-contrast_var.set(1.0)
-contrast_scale = ttk.Scale(left_frame, from_=0.1, to=2.0, length=200, orient=ttk.HORIZONTAL, variable=contrast_var,command=lambda x: update_contrast())
-contrast_scale.pack(pady=5)
-
-# button for filters
-def on_combobox_select(event):
-    selected_value = filter_combobox.get()
-    apply_filter(selected_value,False)
-
-filter_label = ttk.Label(left_frame, text="Select Filter:", background="white")
-filter_label.pack(padx=0, pady=2)
-image_filters = ["Contour", "Black and White", "Blur", "Detail", "Emboss", "Edge Enhance", "Sharpen", "Smooth"]
-filter_combobox = ttk.Combobox(left_frame, values=image_filters, width=15)
-filter_combobox.set("Select an option")
-filter_combobox.bind("<<ComboboxSelected>>", on_combobox_select)
-filter_combobox.pack(padx=10, pady=5) 
-
+# add all images
 image_icon = ttk.PhotoImage(file = 'Images/add.png').subsample(12, 12)
 flip_icon = ttk.PhotoImage(file = 'Images/flip.png').subsample(12, 12)
 rotate_icon = ttk.PhotoImage(file = 'Images/rotate.png').subsample(12, 12)
@@ -238,46 +230,82 @@ color_icon = ttk.PhotoImage(file = 'Images/color.png').subsample(12, 12)
 erase_icon = ttk.PhotoImage(file = 'Images/erase.png').subsample(12, 12)
 save_icon = ttk.PhotoImage(file = 'Images/saved.png').subsample(12, 12)
 
-# button for adding/opening the image file
-image_button = ttk.Button(left_frame, image=image_icon, bootstyle="light", command=open_image)
+# button for opening the image file
+image_button = ttk.Button(left_frame, image=image_icon, bootstyle="light",command=open_image)
 image_button.pack(pady=5)
 
-# button for flipping the image file
-flip_button = ttk.Button(left_frame, image=flip_icon, bootstyle="light", command=flip_image)
+# filters combobox  
+filter_label = ttk.Label(left_frame, text="Select Filter:", background="white")
+filter_label.pack(padx=0, pady=2)
+image_filters = ["Contour", "Black and White", "Blur", "Detail", "Emboss", "Edge Enhance", "Sharpen", "Smooth"]
+filter_combobox = ttk.Combobox(left_frame,bootstyle="dark", values=image_filters, width=15)
+filter_combobox.set("Select an option")
+filter_combobox.bind("<<ComboboxSelected>>", on_combobox_selectFilter)
+filter_combobox.pack(padx=10, pady=5) 
+
+# flip combobox
+flip_label = ttk.Label(left_frame,text="Select Flip:",background="white")
+flip_label.pack(padx=0,pady=2)
+flip_options=["None","Horizontal","Vertical"]
+flip_combobox = ttk.Combobox(left_frame,bootstyle="dark",values=flip_options,width=15)
+flip_combobox.set("Select an option")
+flip_combobox.bind("<<ComboboxSelected>>",on_combobox_selectFlip)
+flip_combobox.pack(padx=10,pady=5)
+
+# flip button
+flip_button = ttk.Button(left_frame, image=flip_icon,bootstyle="light", command=flip_image)
 flip_button.pack(pady=5)
 
-# button for rotating the image file
-rotate_button = ttk.Button(left_frame, image=rotate_icon, bootstyle="light", command=rotate_image)
+# rotate button
+rotate_button = ttk.Button(left_frame, image=rotate_icon,bootstyle="light", command=rotate_image)
 rotate_button.pack(pady=5)
 
-# button for choosing pen color
-color_button = ttk.Button(left_frame, image=color_icon, bootstyle="light", command=change_color)
+# pen color button
+color_button = ttk.Button(left_frame, image=color_icon,bootstyle="light", command=change_color)
 color_button.pack(pady=5)
 
-# button for erasing the lines drawn over the image file
-erase_button = ttk.Button(left_frame, image=erase_icon, bootstyle="light", command=erase_lines)
+# erase button
+erase_button = ttk.Button(left_frame, image=erase_icon, bootstyle="light",command=erase_lines)
 erase_button.pack(pady=5)
 
-# button for saving the image file
-save_button = ttk.Button(left_frame, image=save_icon, bootstyle="light", command=save_image)
+# save button
+save_button = ttk.Button(left_frame, image=save_icon,bootstyle="light", command=save_image)
 save_button.pack(pady=5)
 
-# Add Drawing buttons
-start_drawing_button = ttk.Button(left_frame, text="Start Drawing", command=start_drawing)
+# slider bar for brightness
+brightness_label = ttk.Label(left_frame,bootstyle="dark",text="Brightness:")
+brightness_label.pack(pady=5)
+
+brightness_var = ttk.DoubleVar()
+brightness_var.set(1.0)
+brightness_scale = ttk.Scale(left_frame, from_=0.1, to=2.0, length=200, bootstyle="dark",orient=ttk.HORIZONTAL, variable=brightness_var,command=lambda x: update_brightness())
+brightness_scale.pack(pady=5)
+
+# slider bar for contrast
+contrast_label = ttk.Label(left_frame,bootstyle="dark",text="Contrast:")
+contrast_label.pack(pady=5)
+
+contrast_var = ttk.DoubleVar()
+contrast_var.set(1.0)
+contrast_scale = ttk.Scale(left_frame, from_=0.1, to=2.0, length=200,bootstyle="dark", orient=ttk.HORIZONTAL, variable=contrast_var,command=lambda x: update_contrast())
+contrast_scale.pack(pady=5)
+
+# draw button
+start_drawing_button = ttk.Button(left_frame, bootstyle="dark-outline",text="Start Drawing", command=start_drawing)
 start_drawing_button.pack(pady=5)
 
-stop_drawing_button = ttk.Button(left_frame, text="Stop Drawing", command=stop_drawing)
+stop_drawing_button = ttk.Button(left_frame, bootstyle="dark-outline",text="Stop Drawing", command=stop_drawing)
 stop_drawing_button.pack(pady=5)
 
 canvas.bind("<Button-1>", draw)
 canvas.bind("<B1-Motion>", draw)
 
-# undo
-undo_button = ttk.Button(left_frame, text="Undo", command=undo)
+# undo button
+undo_button = ttk.Button(left_frame, bootstyle="dark-outline",text="Undo", command=undo)
 undo_button.pack(pady=5)
 
-# redo
-redo_button = ttk.Button(left_frame, text="Redo", command=redo)
+# redo button
+redo_button = ttk.Button(left_frame, bootstyle="dark-outline",text="Redo", command=redo)
 redo_button.pack(pady=5)
 
 root.mainloop()
